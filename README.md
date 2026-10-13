@@ -297,6 +297,32 @@ between `Stuck=` and `; Detail=`.
   server.
 * **Tested on VBM 8.** Older versions are not tested.
 
+## Tests
+
+`Test-FindStuckVBMJobs.ps1` is the safety net for changes to the script. It is for whoever
+edits the script. Do not copy it to a VBM server or add it to your RMM.
+
+* It reads the real functions out of `Find-StuckVBMJobs.ps1` and runs the rules against
+  fake VBM objects.
+* It also starts the real script with Windows PowerShell 5.1, the way an RMM does,
+  against a fake VBM module, a fake `ninjarmm-cli`, and a missing or broken PowerShell 7.
+* It needs no VBM. Run it on a PC that has PowerShell 7 and does **not** have VBM, never
+  on a VBM server.
+* It creates throw-away files under `%TEMP%` only, and removes them again.
+
+Run it after every change, on both editions:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -NoProfile -File .\Test-FindStuckVBMJobs.ps1
+```
+
+```powershell
+pwsh.exe -ExecutionPolicy Bypass -NoProfile -File .\Test-FindStuckVBMJobs.ps1
+```
+
+A pass ends with `RESULT: <n> passed, 0 failed` and exit code `0`. Each `FAIL` line names
+the rule that broke.
+
 ## License
 
 [MIT](LICENSE).
