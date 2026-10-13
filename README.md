@@ -99,8 +99,8 @@ An **enabled** backup job or backup copy job is stuck when:
 |---|---|---|
 | Running too long | Its latest run is `Running` for more than `MaxRunHours` | 12 hours |
 | Waiting too long | Its latest run is `Queued` or `Updating` for more than `MaxWaitHours` | 24 hours |
-| Missed its schedule | It is not running, and its next run time passed more than `OverdueMinutes` ago | 60 minutes |
-| Not run for too long | It is not running, and its last run is older than `NotRunHours`, or it never ran | 36 hours |
+| Missed its schedule | Its latest run is not `Running`, `Queued` or `Updating`, and its next run time passed more than `OverdueMinutes` ago | 60 minutes |
+| Not run for too long | Its latest run is not `Running`, `Queued` or `Updating`, and its last run is older than `NotRunHours`, or it never ran | 36 hours |
 | Last run cut off | Its latest run ended `Disconnected` | - |
 
 * `NotRunHours` is for a daily job. A job that runs on fewer days gets the extra time
@@ -159,25 +159,26 @@ Add `-ShowAll` to also list the healthy and disabled items.
 |---|---|
 | `0` | Nothing is stuck. Or VBM is not installed on this server: nothing to check |
 | `5` | Something is stuck. The output names each job or organisation and why |
-| `1` | The check could not run. For example: VBM is installed but PowerShell 7 is not, a setting is not valid, the script could not connect to VBM, or the RMM ran the script text instead of a `.ps1` file. The output says why |
+| `1` | The check could not run, or part of it could not run and nothing is stuck. For example: VBM is installed but PowerShell 7 is not, a setting is not valid, the script could not connect to VBM, or the RMM ran the script text instead of a `.ps1` file. The output says why |
 
 When something is stuck and part of the check also failed, the exit code is `5`. The
 output lists both, but the summary line names only the stuck items.
 
 ## Settings
 
-| Parameter | Default | Meaning |
-|---|---|---|
-| `-MaxRunHours` | `12` | A job run or a sync is stuck after `Running` this many hours |
-| `-MaxWaitHours` | `24` | A job run is stuck after `Queued` or `Updating` this many hours |
-| `-NotRunHours` | `36` | A daily job, or a sync, is stuck when its last run is older than this |
-| `-OverdueMinutes` | `60` | Grace time after a job's next run time, or a sync's scheduled time |
-| `-NinjaField` | empty | NinjaOne only: the device custom field to write the result to |
-| `-ShowAll` | off | Also list the healthy and disabled items |
+| Parameter | Default | Allowed values | Meaning |
+|---|---|---|---|
+| `-MaxRunHours` | `12` | 1 to 8760 | A job run or a sync is stuck after `Running` this many hours |
+| `-MaxWaitHours` | `24` | 1 to 8760 | A job run is stuck after `Queued` or `Updating` this many hours |
+| `-NotRunHours` | `36` | 1 to 8760 | A daily job, or a sync, is stuck when its last run is older than this |
+| `-OverdueMinutes` | `60` | 1 to 525600 | Grace time after a job's next run time, or a sync's scheduled time |
+| `-NinjaField` | empty | A custom field name | NinjaOne only: the device custom field to write the result to |
+| `-ShowAll` | off | Switch. As a Script Variable: `true`, `false`, `1`, `0`, `yes` or `no` | Also list the healthy and disabled items |
 
 A setting not given on the command line comes from an environment variable with the same
-name. This is how NinjaOne Script Variables arrive. A command-line value wins. A value
-that is not valid (for example `abc`, or `0`) is a check failure, exit `1`.
+name. This is how NinjaOne Script Variables arrive. An empty value, or `null`, counts as
+not set. A command-line value wins. A value that is not valid (for example `abc`, or `0`)
+is a check failure, exit `1`.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File C:\Temp\Find-StuckVBMJobs.ps1 -MaxRunHours 8 -NotRunHours 48
